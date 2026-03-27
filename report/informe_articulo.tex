@@ -1,0 +1,94 @@
+\documentclass[11pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+
+\title{Proyecto Integrador de Teoría del Riesgo\\
+Dashboard de Riesgo Financiero para un Portafolio Internacional}
+\author{Nombre del estudiante / grupo}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este trabajo desarrolla un tablero interactivo para el análisis de riesgo financiero de un portafolio compuesto por cinco acciones internacionales: Seven \& i Holdings, Alimentation Couche-Tard, FEMSA, BP y Carrefour. El proyecto integra descarga automática de datos desde APIs, análisis técnico, estudio de rendimientos, modelos ARCH/GARCH, estimación CAPM, medidas VaR/CVaR, optimización de Markowitz, señales automáticas y comparación contra benchmark junto con contexto macroeconómico.
+\end{abstract}
+
+\section{Introducción}
+La gestión del riesgo financiero requiere integrar herramientas estadísticas, financieras y computacionales para apoyar la toma de decisiones. En este proyecto se construye un dashboard en Streamlit con actualización dinámica de datos y módulos especializados para evaluar diferentes dimensiones del riesgo.
+
+\section{Datos y APIs}
+Los precios históricos se obtuvieron mediante Yahoo Finance usando la librería \texttt{yfinance}. Para el contexto macroeconómico se utilizó la API de FRED, incluyendo la serie de tasa libre de riesgo a 3 meses, inflación y tipo de cambio COP/USD.
+
+\section{Activos analizados}
+\begin{itemize}
+    \item Seven \& i Holdings (\texttt{3382.T})
+    \item Alimentation Couche-Tard (\texttt{ATD.TO})
+    \item FEMSA (\texttt{FEMSAUBD.MX})
+    \item BP (\texttt{BP.L})
+    \item Carrefour (\texttt{CA.PA})
+\end{itemize}
+
+\section{Metodología}
+\subsection{Análisis técnico}
+Se calcularon SMA, EMA, RSI, MACD, Bandas de Bollinger y Estocástico.
+
+\subsection{Rendimientos}
+Se estimaron rendimientos simples y logarítmicos, junto con estadísticos descriptivos y pruebas de normalidad.
+
+\subsection{Volatilidad condicional}
+Se ajustaron modelos ARCH(1), GARCH(1,1) y EGARCH(1,1), comparados mediante AIC y BIC.
+
+\subsection{CAPM}
+Se estimó beta para cada activo frente a un benchmark local y se calculó el rendimiento esperado con CAPM.
+
+\subsection{VaR y CVaR}
+Se emplearon tres métodos:
+\begin{itemize}
+    \item Paramétrico
+    \item Histórico
+    \item Monte Carlo
+\end{itemize}
+
+\subsection{Markowitz}
+Se simularon 10{,}000 portafolios para construir el conjunto factible y la frontera eficiente.
+
+\subsection{Señales automáticas}
+Se implementaron reglas de compra/venta usando MACD, RSI, Bollinger, cruces de medias y Estocástico.
+
+\subsection{Benchmark y contexto macro}
+Se comparó el portafolio contra un benchmark global y se reportaron métricas como Sharpe, Alpha de Jensen, Tracking Error, Information Ratio y máximo drawdown.
+
+\section{Resultados}
+En esta sección deben insertarse tablas y figuras del dashboard:
+\begin{itemize}
+    \item Figura de precios e indicadores.
+    \item Tabla descriptiva de rendimientos.
+    \item Comparación de modelos GARCH.
+    \item Tabla de VaR/CVaR.
+    \item Frontera eficiente y pesos óptimos.
+    \item Señales por activo.
+    \item Desempeño contra benchmark.
+\end{itemize}
+
+\section{Conclusiones}
+El dashboard permite integrar diferentes enfoques de medición del riesgo en una sola herramienta interactiva. Esto facilita comparar activos, medir exposición sistemática, cuantificar pérdidas extremas y construir portafolios más eficientes.
+
+\section*{Repositorio y ejecución}
+\begin{itemize}
+    \item Repositorio: completar URL
+    \item Ejecución: \texttt{streamlit run app.py}
+\end{itemize}
+
+\end{document}

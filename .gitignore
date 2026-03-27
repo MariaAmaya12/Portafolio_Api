@@ -1,0 +1,26 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Variables sensibles
+.env
+
+# Caché y Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Streamlit / sistema
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
+
+# Datos generados
+data/raw/*.csv
+data/processed/*.csv
+data/processed/*.parquet
+
+# Archivos de notebook temporales
+.ipynb_checkpoints/
