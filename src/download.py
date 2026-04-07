@@ -105,6 +105,7 @@ def download_multiple_tickers(tickers: List[str], start: str, end: str) -> Dict[
 def build_close_matrix(data: Dict[str, pd.DataFrame]) -> pd.DataFrame:
     """
     Construye matriz de cierres ajustados si existen; si no, usa Close.
+    Maneja correctamente casos donde yfinance devuelve DataFrame en lugar de Series.
     """
     series = {}
 
@@ -113,9 +114,17 @@ def build_close_matrix(data: Dict[str, pd.DataFrame]) -> pd.DataFrame:
             continue
 
         if "Adj Close" in df.columns:
-            series[ticker] = df["Adj Close"].rename(ticker)
+            adj_close = df["Adj Close"]
         elif "Close" in df.columns:
-            series[ticker] = df["Close"].rename(ticker)
+            adj_close = df["Close"]
+        else:
+            continue
+
+        # 🔥 FIX CLAVE
+        if isinstance(adj_close, pd.DataFrame):
+            adj_close = adj_close.iloc[:, 0]
+
+        series[ticker] = adj_close.rename(ticker)
 
     if not series:
         return pd.DataFrame()
@@ -123,7 +132,6 @@ def build_close_matrix(data: Dict[str, pd.DataFrame]) -> pd.DataFrame:
     close = pd.concat(series.values(), axis=1).sort_index()
     close = close.dropna(how="all")
     return close
-
 
 def build_returns_matrix(close: pd.DataFrame) -> pd.DataFrame:
     """
