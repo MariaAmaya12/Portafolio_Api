@@ -6,62 +6,230 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 
+# =========================================================
+# Paleta y helpers de estilo
+# =========================================================
+ASSET_COLORS = {
+    "3382.T": "#8FD3FF",
+    "ATD.TO": "#1E90FF",
+    "FEMSAUBD.MX": "#F6C1C1",
+    "BP.L": "#FF4D4D",
+    "CA.PA": "#7CFC9A",
+    "ACWI": "#3FA7FF",
+    "Portafolio": "#A8D8FF",
+    "Benchmark": "#008CFF",
+}
+
+METHOD_COLORS = {
+    "Histórico": "#3FA7FF",
+    "Paramétrico": "#FFB347",
+    "Monte Carlo": "#FF6B6B",
+}
+
+INDICATOR_COLORS = {
+    "Close": "#8FD3FF",
+    "SMA": "#1E90FF",
+    "EMA": "#F6C1C1",
+    "BB_up": "#8FD3FF",
+    "BB_mid": "#F6C1C1",
+    "BB_low": "#FF4D4D",
+    "RSI": "#8FD3FF",
+    "MACD": "#8FD3FF",
+    "MACD_signal": "#1E90FF",
+    "MACD_hist": "#F6C1C1",
+    "%K": "#8FD3FF",
+    "%D": "#1E90FF",
+    "Forecast": "#8FD3FF",
+    "Regresión": "#1E90FF",
+    "Observaciones": "#8FD3FF",
+}
+
+
+def _get_asset_color(name: str) -> str:
+    return ASSET_COLORS.get(name, "#8FD3FF")
+
+
+def _apply_layout(fig: go.Figure, title: str, xaxis_title: str = "Fecha", yaxis_title: str = "") -> go.Figure:
+    fig.update_layout(
+        title=title,
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis_title=xaxis_title,
+        yaxis_title=yaxis_title,
+        height=460,
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1.0,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        hovermode="x unified",
+    )
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.10)", zeroline=False)
+    return fig
+
+
+def _add_reference_line(fig: go.Figure, y: float, text: str = "", color: str = "rgba(255,255,255,0.35)", dash: str = "dash"):
+    fig.add_hline(y=y, line_dash=dash, line_color=color)
+    return fig
+
+
+# =========================================================
+# Módulo 0 / App
+# =========================================================
 def plot_normalized_prices(close: pd.DataFrame) -> go.Figure:
     base = close / close.dropna().iloc[0] * 100
     fig = go.Figure()
+
     for col in base.columns:
-        fig.add_trace(go.Scatter(x=base.index, y=base[col], mode="lines", name=col))
-    fig.update_layout(title="Precios normalizados (base 100)", xaxis_title="Fecha", yaxis_title="Base 100")
-    return fig
+        fig.add_trace(
+            go.Scatter(
+                x=base.index,
+                y=base[col],
+                mode="lines",
+                name=col,
+                line=dict(color=_get_asset_color(col), width=2),
+            )
+        )
+
+    return _apply_layout(fig, "Precios normalizados (base 100)", "Fecha", "Base 100")
 
 
+# =========================================================
+# Módulo 1 - Técnico
+# =========================================================
 def plot_price_and_mas(df: pd.DataFrame, sma_col: str, ema_col: str) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Close"))
-    fig.add_trace(go.Scatter(x=df.index, y=df[sma_col], mode="lines", name=sma_col))
-    fig.add_trace(go.Scatter(x=df.index, y=df[ema_col], mode="lines", name=ema_col))
-    fig.update_layout(title="Precio con medias móviles", xaxis_title="Fecha", yaxis_title="Precio")
-    return fig
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["Close"], mode="lines", name="Close",
+            line=dict(color=INDICATOR_COLORS["Close"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df[sma_col], mode="lines", name=sma_col,
+            line=dict(color=INDICATOR_COLORS["SMA"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df[ema_col], mode="lines", name=ema_col,
+            line=dict(color=INDICATOR_COLORS["EMA"], width=2)
+        )
+    )
+
+    return _apply_layout(fig, "Precio con medias móviles", "Fecha", "Precio")
 
 
 def plot_bollinger(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], mode="lines", name="Close"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["BB_up"], mode="lines", name="BB_up"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["BB_mid"], mode="lines", name="BB_mid"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["BB_low"], mode="lines", name="BB_low"))
-    fig.update_layout(title="Bandas de Bollinger", xaxis_title="Fecha", yaxis_title="Precio")
-    return fig
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["Close"], mode="lines", name="Close",
+            line=dict(color=INDICATOR_COLORS["Close"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["BB_up"], mode="lines", name="BB_up",
+            line=dict(color=INDICATOR_COLORS["BB_up"], width=1.5)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["BB_mid"], mode="lines", name="BB_mid",
+            line=dict(color=INDICATOR_COLORS["BB_mid"], width=1.5)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["BB_low"], mode="lines", name="BB_low",
+            line=dict(color=INDICATOR_COLORS["BB_low"], width=1.5)
+        )
+    )
+
+    return _apply_layout(fig, "Bandas de Bollinger", "Fecha", "Precio")
 
 
 def plot_rsi(df: pd.DataFrame, rsi_col: str) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df[rsi_col], mode="lines", name=rsi_col))
-    fig.add_hline(y=70, line_dash="dash")
-    fig.add_hline(y=30, line_dash="dash")
-    fig.update_layout(title="RSI", xaxis_title="Fecha", yaxis_title="RSI")
-    return fig
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df[rsi_col], mode="lines", name=rsi_col,
+            line=dict(color=INDICATOR_COLORS["RSI"], width=2)
+        )
+    )
+
+    _add_reference_line(fig, 70)
+    _add_reference_line(fig, 30)
+
+    fig.update_yaxes(range=[0, 100])
+
+    return _apply_layout(fig, "RSI", "Fecha", "RSI")
 
 
 def plot_macd(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df["MACD"], mode="lines", name="MACD"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["MACD_signal"], mode="lines", name="MACD_signal"))
-    fig.add_trace(go.Bar(x=df.index, y=df["MACD_hist"], name="MACD_hist"))
-    fig.update_layout(title="MACD", xaxis_title="Fecha")
-    return fig
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["MACD"], mode="lines", name="MACD",
+            line=dict(color=INDICATOR_COLORS["MACD"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["MACD_signal"], mode="lines", name="MACD_signal",
+            line=dict(color=INDICATOR_COLORS["MACD_signal"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            x=df.index, y=df["MACD_hist"], name="MACD_hist",
+            marker_color=INDICATOR_COLORS["MACD_hist"],
+            opacity=0.55
+        )
+    )
+
+    return _apply_layout(fig, "MACD", "Fecha", "Valor")
 
 
 def plot_stochastic(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df.index, y=df["%K"], mode="lines", name="%K"))
-    fig.add_trace(go.Scatter(x=df.index, y=df["%D"], mode="lines", name="%D"))
-    fig.add_hline(y=80, line_dash="dash")
-    fig.add_hline(y=20, line_dash="dash")
-    fig.update_layout(title="Oscilador Estocástico", xaxis_title="Fecha")
-    return fig
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["%K"], mode="lines", name="%K",
+            line=dict(color=INDICATOR_COLORS["%K"], width=2)
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=df["%D"], mode="lines", name="%D",
+            line=dict(color=INDICATOR_COLORS["%D"], width=2)
+        )
+    )
+
+    _add_reference_line(fig, 80)
+    _add_reference_line(fig, 20)
+
+    fig.update_yaxes(range=[0, 100])
+
+    return _apply_layout(fig, "Oscilador estocástico", "Fecha", "Nivel")
 
 
+# =========================================================
+# Módulo 2 - Rendimientos
+# =========================================================
 def plot_histogram_with_normal(returns: pd.Series) -> go.Figure:
     r = returns.dropna()
     mu, sigma = r.mean(), r.std(ddof=1)
@@ -69,130 +237,365 @@ def plot_histogram_with_normal(returns: pd.Series) -> go.Figure:
     y = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
     fig = go.Figure()
-    fig.add_trace(go.Histogram(x=r, histnorm="probability density", name="Histograma", nbinsx=40))
-    fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Normal teórica"))
-    fig.update_layout(title="Histograma con curva normal", xaxis_title="Rendimiento", yaxis_title="Densidad")
-    return fig
+    fig.add_trace(
+        go.Histogram(
+            x=r,
+            histnorm="probability density",
+            name="Histograma",
+            nbinsx=40,
+            marker_color="#8FD3FF",
+            opacity=0.85,
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=x, y=y, mode="lines", name="Normal teórica",
+            line=dict(color="#008CFF", width=2)
+        )
+    )
+
+    return _apply_layout(fig, "Histograma con curva normal", "Rendimiento", "Densidad")
 
 
 def plot_qq(qq_df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
+
     fig.add_trace(
         go.Scatter(
             x=qq_df["theoretical_quantiles"],
             y=qq_df["sample_quantiles"],
             mode="markers",
             name="Q-Q",
+            marker=dict(color="#8FD3FF", size=5, opacity=0.8),
         )
     )
-    min_q = min(qq_df.min())
-    max_q = max(qq_df.max())
-    fig.add_trace(go.Scatter(x=[min_q, max_q], y=[min_q, max_q], mode="lines", name="45°"))
-    fig.update_layout(title="Q-Q plot", xaxis_title="Cuantiles teóricos", yaxis_title="Cuantiles muestrales")
-    return fig
+
+    min_q = float(np.nanmin([qq_df["theoretical_quantiles"].min(), qq_df["sample_quantiles"].min()]))
+    max_q = float(np.nanmax([qq_df["theoretical_quantiles"].max(), qq_df["sample_quantiles"].max()]))
+
+    fig.add_trace(
+        go.Scatter(
+            x=[min_q, max_q],
+            y=[min_q, max_q],
+            mode="lines",
+            name="45°",
+            line=dict(color="#008CFF", width=2),
+        )
+    )
+
+    return _apply_layout(fig, "Q-Q plot", "Cuantiles teóricos", "Cuantiles muestrales")
 
 
 def plot_box(returns: pd.Series) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Box(y=returns.dropna(), name="Rendimientos"))
-    fig.update_layout(title="Boxplot de rendimientos", yaxis_title="Rendimiento")
-    return fig
+    fig.add_trace(
+        go.Box(
+            y=returns.dropna(),
+            name="Rendimientos",
+            marker_color="#8FD3FF",
+            line_color="#8FD3FF",
+            boxmean=True,
+        )
+    )
+    return _apply_layout(fig, "Boxplot de rendimientos", "", "Rendimiento")
 
 
+# =========================================================
+# Módulo 3 - GARCH
+# =========================================================
 def plot_volatility(vol_df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    for col in vol_df.columns:
-        fig.add_trace(go.Scatter(x=vol_df.index, y=vol_df[col], mode="lines", name=col))
-    fig.update_layout(title="Volatilidad condicional estimada", xaxis_title="Fecha", yaxis_title="Volatilidad")
-    return fig
+
+    palette = ["#8FD3FF", "#1E90FF", "#F6C1C1", "#FFB347", "#7CFC9A"]
+
+    for i, col in enumerate(vol_df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=vol_df.index,
+                y=vol_df[col],
+                mode="lines",
+                name=col,
+                line=dict(color=palette[i % len(palette)], width=2),
+            )
+        )
+
+    return _apply_layout(fig, "Volatilidad condicional estimada", "Fecha", "Volatilidad")
 
 
 def plot_forecast(forecast_df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
+
     fig.add_trace(
         go.Scatter(
             x=forecast_df["horizonte"],
             y=forecast_df["volatilidad_pronosticada"],
             mode="lines+markers",
             name="Forecast",
+            line=dict(color=INDICATOR_COLORS["Forecast"], width=2),
+            marker=dict(size=6),
         )
     )
-    fig.update_layout(title="Pronóstico de volatilidad", xaxis_title="Horizonte", yaxis_title="Volatilidad")
-    return fig
+
+    return _apply_layout(fig, "Pronóstico de volatilidad", "Horizonte", "Volatilidad")
 
 
+# =========================================================
+# Módulo 4 - CAPM
+# =========================================================
 def plot_scatter_regression(x: np.ndarray, y: np.ndarray, yhat: np.ndarray, title: str) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y, mode="markers", name="Observaciones"))
+
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=y,
+            mode="markers",
+            name="Observaciones",
+            marker=dict(color=INDICATOR_COLORS["Observaciones"], size=5, opacity=0.75),
+        )
+    )
+
     sort_idx = np.argsort(x)
-    fig.add_trace(go.Scatter(x=x[sort_idx], y=yhat[sort_idx], mode="lines", name="Regresión"))
-    fig.update_layout(title=title, xaxis_title="Exceso benchmark", yaxis_title="Exceso activo")
-    return fig
+    fig.add_trace(
+        go.Scatter(
+            x=x[sort_idx],
+            y=yhat[sort_idx],
+            mode="lines",
+            name="Regresión",
+            line=dict(color=INDICATOR_COLORS["Regresión"], width=2),
+        )
+    )
+
+    return _apply_layout(fig, title, "Exceso benchmark", "Exceso activo")
 
 
+# =========================================================
+# Módulo 5 - VaR / CVaR
+# =========================================================
 def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
+    r = returns.dropna()
     fig = go.Figure()
-    fig.add_trace(go.Histogram(x=returns.dropna(), nbinsx=50, name="Rendimientos"))
+
+    fig.add_trace(
+        go.Histogram(
+            x=r,
+            nbinsx=50,
+            name="Rendimientos",
+            marker_color="#8FD3FF",
+            opacity=0.85,
+        )
+    )
+
+    # Líneas VaR y CVaR sin anotaciones encima del gráfico
     for _, row in table.iterrows():
-        fig.add_vline(x=-row["VaR_diario"], line_dash="dash", annotation_text=f'VaR {row["método"]}')
-        fig.add_vline(x=-row["CVaR_diario"], line_dash="dot", annotation_text=f'CVaR {row["método"]}')
-    fig.update_layout(title="Distribución con líneas VaR / CVaR", xaxis_title="Rendimiento")
+        metodo = row["método"]
+        color = METHOD_COLORS.get(metodo, "#FFFFFF")
+
+        fig.add_trace(
+            go.Scatter(
+                x=[-row["VaR_diario"], -row["VaR_diario"]],
+                y=[0, 1],
+                mode="lines",
+                name=f"VaR {metodo}",
+                line=dict(color=color, width=2, dash="dash"),
+                yaxis="y2",
+            )
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=[-row["CVaR_diario"], -row["CVaR_diario"]],
+                y=[0, 1],
+                mode="lines",
+                name=f"CVaR {metodo}",
+                line=dict(color=color, width=2, dash="dot"),
+                yaxis="y2",
+            )
+        )
+
+    fig.update_layout(
+        title="Distribución con líneas VaR / CVaR",
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis_title="Rendimiento",
+        yaxis_title="Frecuencia",
+        yaxis2=dict(
+            overlaying="y",
+            side="right",
+            range=[0, 1],
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+        ),
+        height=460,
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1.0,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(0,0,0,0)",
+        ),
+        barmode="overlay",
+        hovermode="x unified",
+    )
+
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.10)", zeroline=False)
+
     return fig
 
 
+# =========================================================
+# Módulo 6 - Markowitz
+# =========================================================
 def plot_correlation_heatmap(corr: pd.DataFrame) -> go.Figure:
-    fig = px.imshow(corr, text_auto=".2f", aspect="auto", title="Matriz de correlación")
+    fig = px.imshow(
+        corr,
+        text_auto=".2f",
+        aspect="auto",
+        color_continuous_scale="RdBu_r",
+        zmin=-1,
+        zmax=1,
+        title="Matriz de correlación",
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=420,
+        margin=dict(l=40, r=40, t=60, b=40),
+        coloraxis_colorbar=dict(
+            title="Correlación",
+            x=1.02,
+            y=0.5,
+            len=0.8,
+            thickness=14,
+        ),
+    )
+
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=False)
+
     return fig
 
-
-def plot_frontier(sim_df: pd.DataFrame, frontier_df: pd.DataFrame, min_var: pd.Series, max_sharpe: pd.Series) -> go.Figure:
+def plot_frontier(
+    sim_df: pd.DataFrame,
+    frontier_df: pd.DataFrame,
+    min_var: pd.Series,
+    max_sharpe: pd.Series,
+) -> go.Figure:
     fig = go.Figure()
+
     fig.add_trace(
         go.Scatter(
             x=sim_df["volatility"],
             y=sim_df["return"],
             mode="markers",
-            marker=dict(size=5, color=sim_df["sharpe"], showscale=True),
+            marker=dict(
+                size=4,
+                color=sim_df["sharpe"],
+                colorscale="Blues",
+                showscale=True,
+                colorbar=dict(
+                    title="Sharpe",
+                    x=1.12,
+                    y=0.5,
+                    len=0.75,
+                    thickness=16,
+                ),
+                opacity=0.75,
+            ),
             name="Portafolios",
         )
     )
+
     fig.add_trace(
         go.Scatter(
             x=frontier_df["volatility"],
             y=frontier_df["return"],
             mode="lines",
             name="Frontera eficiente",
+            line=dict(color="#8FD3FF", width=3),
         )
     )
+
     fig.add_trace(
         go.Scatter(
             x=[min_var["volatility"]],
             y=[min_var["return"]],
             mode="markers",
-            marker=dict(size=12, symbol="diamond"),
+            marker=dict(size=12, symbol="diamond", color="#F6C1C1"),
             name="Mínima varianza",
         )
     )
+
     fig.add_trace(
         go.Scatter(
             x=[max_sharpe["volatility"]],
             y=[max_sharpe["return"]],
             mode="markers",
-            marker=dict(size=12, symbol="star"),
+            marker=dict(size=14, symbol="star", color="#FF4D4D"),
             name="Máximo Sharpe",
         )
     )
-    fig.update_layout(title="Frontera eficiente de Markowitz", xaxis_title="Volatilidad", yaxis_title="Retorno")
-    return fig
+
+    fig.update_layout(
+        title="Frontera eficiente de Markowitz",
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis_title="Volatilidad",
+        yaxis_title="Retorno",
+        height=460,
+        margin=dict(l=40, r=110, t=60, b=40),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=0.98,
+            xanchor="left",
+            x=1.02,
+            bgcolor="rgba(0,0,0,0)",
+            font=dict(size=11),
+        ),
+        hovermode="closest",
+    )
+
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.10)", zeroline=False)
+
+    return _apply_layout(fig, "Frontera eficiente de Markowitz", "Volatilidad", "Retorno")
 
 
+# =========================================================
+# Módulo 8 - Benchmark
+# =========================================================
 def plot_benchmark_base100(port: pd.Series, bench: pd.Series) -> go.Figure:
     df = pd.concat([port, bench], axis=1).dropna()
     df.columns = ["Portafolio", "Benchmark"]
     base = df / df.iloc[0] * 100
 
     fig = go.Figure()
-    for col in base.columns:
-        fig.add_trace(go.Scatter(x=base.index, y=base[col], mode="lines", name=col))
-    fig.update_layout(title="Portafolio vs benchmark (base 100)", xaxis_title="Fecha", yaxis_title="Base 100")
-    return fig
+    fig.add_trace(
+        go.Scatter(
+            x=base.index,
+            y=base["Portafolio"],
+            mode="lines",
+            name="Portafolio",
+            line=dict(color=ASSET_COLORS["Portafolio"], width=2.5),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=base.index,
+            y=base["Benchmark"],
+            mode="lines",
+            name="Benchmark",
+            line=dict(color=ASSET_COLORS["Benchmark"], width=2.5),
+        )
+    )
+
+    return _apply_layout(fig, "Portafolio vs benchmark (base 100)", "Fecha", "Base 100")
