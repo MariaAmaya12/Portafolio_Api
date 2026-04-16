@@ -206,8 +206,11 @@ def validate_weights(weights: np.ndarray, n_assets: int | None = None) -> np.nda
 
 def parametric_var_cvar(returns: pd.Series, alpha: float = 0.95) -> dict:
     """
-    VaR y CVaR paramétricos (normal).
-    Se reportan como pérdidas positivas.
+    VaR y CVaR paramétricos bajo supuesto de normalidad.
+
+    Convención:
+    - Se define la pérdida como L = -R
+    - VaR y CVaR se reportan como pérdidas positivas
     """
     validate_confidence_level(alpha)
 
@@ -219,10 +222,27 @@ def parametric_var_cvar(returns: pd.Series, alpha: float = 0.95) -> dict:
     mu = r.mean()
     sigma = r.std(ddof=1)
     q = 1 - alpha
-    z = norm.ppf(q)
 
-    var_daily = max(0.0, -(mu + sigma * z))
-    cvar_daily = max(0.0, -(mu - sigma * norm.pdf(z) / q))
+    if sigma == 0 or np.isnan(sigma):
+        loss_level = max(0.0, -mu)
+        return {
+            "VaR_diario": float(loss_level),
+            "CVaR_diario": float(loss_level),
+            "VaR_anualizado": float(loss_level * np.sqrt(TRADING_DAYS)),
+            "CVaR_anualizado": float(loss_level * np.sqrt(TRADING_DAYS)),
+        }
+
+    z_q = norm.ppf(q)
+
+    # Cuantil del rendimiento y conversión a pérdida usando L = -R
+    return_quantile = mu + sigma * z_q
+    var_daily = max(0.0, -return_quantile)
+
+    # CVaR paramétrico para pérdidas bajo normalidad
+    cvar_daily = max(0.0, -mu + sigma * (norm.pdf(z_q) / q))
+
+    # Coherencia mínima: CVaR no debe ser menor que VaR
+    cvar_daily = max(var_daily, cvar_daily)
 
     return {
         "VaR_diario": float(var_daily),
