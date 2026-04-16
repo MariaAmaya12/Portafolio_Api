@@ -45,7 +45,20 @@ Los precios históricos se obtuvieron mediante Yahoo Finance usando la librería
 Se calcularon SMA, EMA, RSI, MACD, Bandas de Bollinger y Estocástico.
 
 \subsection{Rendimientos}
-Se estimaron rendimientos simples y logarítmicos, junto con estadísticos descriptivos y pruebas de normalidad.
+Sea \(P_{i,t}\) el precio del activo \(i\) en el instante \(t\). A partir de las series de precios se calcularon dos medidas de rendimiento: el rendimiento simple
+\[
+R_{i,t}=\frac{P_{i,t}-P_{i,t-1}}{P_{i,t-1}},
+\]
+y el rendimiento logarítmico
+\[
+r_{i,t}=\ln\left(\frac{P_{i,t}}{P_{i,t-1}}\right).
+\]
+
+El uso conjunto de ambas medidas permite complementar la interpretación financiera y estadística de la información. El rendimiento simple facilita la lectura económica inmediata de ganancias y pérdidas porcentuales, mientras que el rendimiento logarítmico resulta conveniente para el análisis temporal y la modelación estadística debido a su aditividad en el tiempo.
+
+Sobre las series de rendimientos se calcularon estadísticos descriptivos como media, volatilidad, asimetría y curtosis, con el fin de caracterizar la tendencia central, la dispersión y la forma de la distribución empírica. Adicionalmente, se aplicaron pruebas de normalidad para evaluar si la distribución observada de los rendimientos era compatible con el supuesto gaussiano utilizado posteriormente en algunos modelos paramétricos de riesgo.
+
+Este análisis preliminar es fundamental en teoría del riesgo, ya que permite identificar la presencia de colas pesadas, asimetrías o desviaciones respecto a la normalidad, elementos que afectan directamente la estimación e interpretación de medidas como el Value at Risk y el Conditional Value at Risk.
 
 \subsection{Volatilidad condicional}
 Se ajustaron modelos ARCH(1), GARCH(1,1) y EGARCH(1,1), comparados mediante AIC y BIC.
