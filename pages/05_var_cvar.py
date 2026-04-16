@@ -56,27 +56,29 @@ if table.empty:
 # Explicación metodológica
 # ==============================
 st.markdown(
-    f"""
+    rf"""
     En este módulo se comparan medidas de riesgo extremo para un portafolio equiponderado
     con un nivel de confianza del **{int(alpha * 100)}%**.
 
     ### Interpretación teórica de VaR y CVaR
 
-    Sea \(R_{{p,t}}\) el rendimiento del portafolio en el periodo \(t\), definido como una combinación
+    Sea $R_{{p,t}}$ el rendimiento del portafolio en el periodo \(t\), definido como una combinación
     lineal de los rendimientos individuales de los activos según sus pesos. En este análisis, la pérdida
     del portafolio se define como:
+    """
+)
 
-    \[
-    L_t = -R_{{p,t}}
-    \]
+st.latex(r"L_t = -R_{p,t}")
 
+st.markdown(
+    r"""
     De esta forma:
     - valores **positivos** de \(L_t\) representan **pérdidas**
     - valores **negativos** de \(L_t\) representan **ganancias**
 
-    El **Value at Risk (VaR)** al nivel de confianza \\(\\alpha\\) corresponde al cuantil de la distribución
+    El **Value at Risk (VaR)** al nivel de confianza \(\alpha\) corresponde al cuantil de la distribución
     de pérdidas. En términos prácticos, representa la pérdida máxima esperada que no se excede con
-    probabilidad \\(\\alpha\\).
+    probabilidad \(\alpha\).
 
     El **Conditional Value at Risk (CVaR)**, también llamado **Expected Shortfall**, mide la pérdida promedio
     en los escenarios más extremos, es decir, cuando la pérdida supera el VaR.
