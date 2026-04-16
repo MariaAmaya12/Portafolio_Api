@@ -322,7 +322,7 @@ def plot_volatility(vol_df: pd.DataFrame) -> go.Figure:
     return _apply_layout(fig, "Volatilidad condicional estimada", "Fecha", "Volatilidad")
 
 
-def plot_forecast(forecast_df: pd.DataFrame) -> go.Figure:
+def plot_forecast(forecast_df: pd.DataFrame, long_run_vol: float | None = None) -> go.Figure:
     fig = go.Figure()
 
     fig.add_trace(
@@ -335,6 +335,15 @@ def plot_forecast(forecast_df: pd.DataFrame) -> go.Figure:
             marker=dict(size=6),
         )
     )
+
+    if long_run_vol is not None:
+        fig.add_hline(
+            y=long_run_vol,
+            line_dash="dash",
+            line_color="#FFB347",
+            annotation_text="Volatilidad de largo plazo",
+            annotation_position="top left",
+        )
 
     return _apply_layout(fig, "Pronóstico de volatilidad", "Horizonte", "Volatilidad")
 
@@ -382,11 +391,10 @@ def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
             nbinsx=50,
             name="Rendimientos",
             marker_color="#8FD3FF",
-            opacity=0.85,
+            opacity=0.80,
         )
     )
 
-    # Líneas VaR y CVaR sin anotaciones encima del gráfico
     for _, row in table.iterrows():
         metodo = row["método"]
         color = METHOD_COLORS.get(metodo, "#FFFFFF")
@@ -399,6 +407,7 @@ def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
                 name=f"VaR {metodo}",
                 line=dict(color=color, width=2, dash="dash"),
                 yaxis="y2",
+                hovertemplate=f"VaR {metodo}: %{{x:.2%}}<extra></extra>",
             )
         )
 
@@ -410,11 +419,12 @@ def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
                 name=f"CVaR {metodo}",
                 line=dict(color=color, width=2, dash="dot"),
                 yaxis="y2",
+                hovertemplate=f"CVaR {metodo}: %{{x:.2%}}<extra></extra>",
             )
         )
 
     fig.update_layout(
-        title="Distribución con líneas VaR / CVaR",
+        title="Distribución de rendimientos con VaR y CVaR",
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -429,7 +439,7 @@ def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
             zeroline=False,
         ),
         height=460,
-        margin=dict(l=40, r=40, t=60, b=40),
+        margin=dict(l=40, r=120, t=60, b=40),
         legend=dict(
             orientation="v",
             yanchor="top",
@@ -437,6 +447,7 @@ def plot_var_distribution(returns: pd.Series, table: pd.DataFrame) -> go.Figure:
             xanchor="left",
             x=1.02,
             bgcolor="rgba(0,0,0,0)",
+            font=dict(size=11),
         ),
         barmode="overlay",
         hovermode="x unified",

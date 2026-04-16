@@ -72,9 +72,23 @@ with st.sidebar:
         index=0,
     )
 
-    st.divider()
-    st.subheader("Opciones de visualización")
-    mostrar_tablas = st.checkbox("Mostrar tablas completas", value=False)
+st.divider()
+st.subheader("Opciones de visualización")
+
+mostrar_long_run = st.checkbox(
+    "Mostrar nivel de volatilidad de largo plazo (steady-state)",
+    value=True
+)
+
+mostrar_tablas = st.checkbox("Mostrar tablas completas", value=False)
+
+mostrar_diagnostico = False
+mostrar_residuos = False
+
+if modo == "Estadístico":
+    mostrar_diagnostico = st.checkbox("Mostrar diagnóstico del modelo", value=True)
+    mostrar_residuos = st.checkbox("Mostrar residuos estandarizados", value=False)
+    
 
     mostrar_diagnostico = False
     mostrar_residuos = False
@@ -201,6 +215,36 @@ if results["comparison"].empty:
     st.stop()
 
 # ==============================
+# Volatilidad de largo plazo (MEJORA CLAVE)
+# ==============================
+long_run_vol = None
+
+try:
+    best_model_name = results.get("best_model_name")
+    comparison_df = results.get("comparison")
+
+    if best_model_name is not None and comparison_df is not None and not comparison_df.empty:
+        best_row = comparison_df.loc[comparison_df["modelo"] == best_model_name]
+
+        if not best_row.empty:
+            omega = pd.to_numeric(best_row["omega"], errors="coerce").iloc[0]
+            alpha_1 = pd.to_numeric(best_row["alpha_1"], errors="coerce").iloc[0]
+
+            beta_1 = None
+            if "beta_1" in best_row.columns:
+                beta_1 = pd.to_numeric(best_row["beta_1"], errors="coerce").iloc[0]
+
+            if pd.notna(omega) and pd.notna(alpha_1):
+                persistence = alpha_1 + beta_1 if pd.notna(beta_1) else alpha_1
+
+                if persistence < 1:
+                    long_run_var = omega / (1 - persistence)
+                    if long_run_var > 0:
+                        long_run_vol = long_run_var ** 0.5
+except Exception:
+    long_run_vol = None
+
+# ==============================
 # KPIs
 # ==============================
 st.markdown("### KPIs del ajuste")
@@ -255,22 +299,43 @@ else:
 # ==============================
 # Gráficos
 # ==============================
+
+st.caption(
+    "El forecast muestra la evolución esperada de la volatilidad para distintos horizontes. "
+    "Opcionalmente se incluye la volatilidad de largo plazo del modelo."
+)
+
 st.markdown("### Volatilidad y pronóstico")
 
 col1, col2 = st.columns(2)
 with col1:
     st.plotly_chart(plot_volatility(results["volatility"]), width="stretch")
 with col2:
-    st.plotly_chart(plot_forecast(results["forecast"]), width="stretch")
+    st.plotly_chart(
+        plot_forecast(
+            results["forecast"],
+            long_run_vol=long_run_vol if mostrar_long_run else None
+        ),
+    width="stretch"
+)
 
 if modo == "General":
     st.info(
         """
-        **Cómo leer estos gráficos**
+        **Cómo leer la volatilidad condicional estimada**
 
         - El primer gráfico muestra cómo cambia la volatilidad estimada a lo largo del tiempo.
-        - El segundo resume el pronóstico de volatilidad a futuro.
         - Valores altos indican mayor incertidumbre y, por tanto, mayor riesgo.
+        
+        **Cómo leer el pronóstico de volatilidad**
+
+        **Cómo leer el pronóstico de volatilidad**
+
+        - El horizonte representa el número de días hacia el futuro.
+        - En el corto plazo, la volatilidad refleja choques recientes.
+        - A medida que aumenta el horizonte, la volatilidad tiende a estabilizarse.
+        - La línea punteada muestra la **volatilidad de largo plazo** del modelo.
+        - Esto refleja el comportamiento típico de modelos GARCH (mean reversion).
         """
     )
 else:
