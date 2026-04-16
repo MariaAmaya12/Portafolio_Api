@@ -83,5 +83,14 @@ st.subheader("Métricas adicionales")
 st.dataframe(extras_df, width="stretch")
 
 st.info(
-    "Este módulo compara el portafolio con un benchmark global y resume alpha, tracking error e information ratio."
+    """
+    **Interpretación del benchmark y del contexto macro**
+
+    - El gráfico base 100 permite comparar visualmente la trayectoria acumulada del portafolio frente al benchmark.
+    - Un **Alpha de Jensen** positivo sugiere que el portafolio obtuvo un desempeño superior al explicado por su nivel de riesgo sistemático.
+    - Un **Tracking Error** alto indica mayor desviación frente al benchmark, mientras que uno bajo sugiere un comportamiento más cercano al índice de referencia.
+    - El **Information Ratio** resume cuánto retorno activo genera el portafolio por unidad de riesgo activo.
+    - El **máximo drawdown** muestra la peor caída acumulada desde un máximo previo, y es clave para evaluar pérdidas severas.
+    - El contexto macroeconómico, en particular la tasa libre de riesgo, la inflación y la tasa de cambio, ayuda a interpretar el entorno financiero en el que se evalúa el portafolio.
+    """
 )

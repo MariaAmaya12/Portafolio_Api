@@ -81,5 +81,14 @@ fig = plot_scatter_regression(
 st.plotly_chart(fig, width="stretch")
 
 st.info(
-    "Beta > 1 sugiere mayor sensibilidad al mercado; Beta < 1 sugiere comportamiento más defensivo."
+    """
+    **Interpretación económica del CAPM y la beta**
+
+    - **Beta > 1**: el activo presenta mayor sensibilidad a los movimientos del mercado, por lo que su **riesgo sistemático** es superior al del benchmark.
+    - **Beta < 1**: el activo muestra un comportamiento más defensivo y menor exposición al riesgo sistemático.
+    - **Beta ≈ 1**: el activo tiende a moverse en línea con el mercado.
+    - El **riesgo sistemático** es el componente del riesgo que no puede eliminarse mediante diversificación, porque depende de factores de mercado.
+    - El **riesgo no sistemático** corresponde a factores propios del activo o de la firma y, en teoría, puede reducirse mediante diversificación.
+    - En el CAPM, el rendimiento esperado remunera principalmente la exposición al **riesgo sistemático**, capturada por la beta.
+    """
 )

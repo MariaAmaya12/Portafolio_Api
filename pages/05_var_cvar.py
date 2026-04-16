@@ -56,9 +56,32 @@ if table.empty:
 # Explicación metodológica
 # ==============================
 st.markdown(
-    f"""
+    rf"""
     En este módulo se comparan medidas de riesgo extremo para un portafolio equiponderado
     con un nivel de confianza del **{int(alpha * 100)}%**.
+
+    ### Interpretación teórica de VaR y CVaR
+
+    Sea $R_{{p,t}}$ el rendimiento del portafolio en el periodo \(t\), definido como una combinación
+    lineal de los rendimientos individuales de los activos según sus pesos. En este análisis, la pérdida
+    del portafolio se define como:
+    """
+)
+
+st.latex(r"L_t = -R_{p,t}")
+
+st.markdown(
+    r"""
+    De esta forma:
+    - valores **positivos** de \(L_t\) representan **pérdidas**
+    - valores **negativos** de \(L_t\) representan **ganancias**
+
+    El **Value at Risk (VaR)** al nivel de confianza \(\alpha\) corresponde al cuantil de la distribución
+    de pérdidas. En términos prácticos, representa la pérdida máxima esperada que no se excede con
+    probabilidad \(\alpha\).
+
+    El **Conditional Value at Risk (CVaR)**, también llamado **Expected Shortfall**, mide la pérdida promedio
+    en los escenarios más extremos, es decir, cuando la pérdida supera el VaR.
 
     **Convención usada en este proyecto:**
     - El **VaR** y el **CVaR** se reportan como **pérdidas positivas**.
@@ -69,15 +92,15 @@ st.markdown(
 st.info(
     """
     **Interpretación de métodos:**
-    - **Paramétrico**: supone normalidad de los rendimientos.
-    - **Histórico**: usa la distribución empírica observada.
-    - **Monte Carlo**: simula escenarios futuros a partir de media y covarianza.
+    - **Paramétrico**: supone normalidad de los rendimientos del portafolio.
+    - **Histórico**: usa la distribución empírica observada, sin imponer una distribución teórica.
+    - **Monte Carlo**: simula escenarios futuros a partir de la media y la matriz de covarianza de los activos.
     """
 )
 
 # ==============================
 # Portafolio
-# ==============================
+# ============================== 
 st.subheader("Portafolio equiponderado")
 st.write("Pesos:", dict(zip(returns.columns, np.round(weights, 4))))
 
