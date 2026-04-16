@@ -255,7 +255,10 @@ def parametric_var_cvar(returns: pd.Series, alpha: float = 0.95) -> dict:
 def historical_var_cvar(returns: pd.Series, alpha: float = 0.95) -> dict:
     """
     VaR y CVaR históricos.
-    Se reportan como pérdidas positivas.
+
+    Convención:
+    - Se define la pérdida como L = -R
+    - VaR y CVaR se reportan como pérdidas positivas
     """
     validate_confidence_level(alpha)
 
@@ -264,11 +267,24 @@ def historical_var_cvar(returns: pd.Series, alpha: float = 0.95) -> dict:
     except ValueError:
         return {}
 
-    cutoff = np.quantile(r, 1 - alpha)
-    tail = r[r <= cutoff]
+    q = 1 - alpha
 
-    var_daily = max(0.0, -cutoff)
-    cvar_daily = max(0.0, -tail.mean()) if len(tail) > 0 else 0.0
+    # Cuantil izquierdo de los rendimientos
+    return_cutoff = np.quantile(r, q)
+
+    # Cola de pérdidas: rendimientos peores o iguales al cuantil
+    tail_returns = r[r <= return_cutoff]
+
+    # Conversión a pérdidas usando L = -R
+    var_daily = max(0.0, -return_cutoff)
+
+    if len(tail_returns) > 0:
+        cvar_daily = max(0.0, -tail_returns.mean())
+    else:
+        cvar_daily = var_daily
+
+    # Coherencia mínima: CVaR no debe ser menor que VaR
+    cvar_daily = max(var_daily, cvar_daily)
 
     return {
         "VaR_diario": float(var_daily),
