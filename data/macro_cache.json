@@ -2,7 +2,7 @@
   "risk_free_rate_pct": 3.0,
   "inflation_yoy": 0.4253477450813339,
   "cop_per_usd": 4053.13583333333,
-  "usdcop_market": 3149.219970703125,
+  "usdcop_market": 3135.530029296875,
   "source": "github_actions_cache",
-  "last_updated": "2026-09-02T23:31:47.253955+00:00"
+  "last_updated": "2026-09-03T16:54:59.428479+00:00"
 }
